@@ -8,19 +8,10 @@ const client = new MercadoPagoConfig({
   accessToken: access_token,
 });
 
-
-
 const app = express();
 const port = process.env.PORT || 8080;
 
-const corsOptions = {
-  origin: process.env.FRONT_URL,
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: false,
-  optionsSuccessStatus: 204,
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
