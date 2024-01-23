@@ -1,18 +1,19 @@
 import express from "express";
 import cors from "cors";
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 // SDK de Mercado Pago
 import { MercadoPagoConfig, Preference } from "mercadopago";
-const access_token = process.env.ACCESS_TOKEN;
+//const access_token = process.env.ACCESS_TOKEN;
 const client = new MercadoPagoConfig({
-  accessToken: access_token,
+  accessToken: "TEST-3813879121312340-012217-dd7a2a50e5bc2ad63771a4a9cfa08089-458101383",
 });
 
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.use(cors);
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
