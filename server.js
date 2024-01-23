@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+require('dotenv').config();
 
 // SDK de Mercado Pago
 import { MercadoPagoConfig, Preference } from "mercadopago";
@@ -11,15 +12,7 @@ const client = new MercadoPagoConfig({
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Configurar CORS para permitir solicitudes desde https://ecommerce-electro.vercel.app
-const corsOptions = {
-  origin: 'https://ecommerce-electro.vercel.app',
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: false,
-  optionsSuccessStatus: 204,
-};
-
-app.use(cors(corsOptions));
+app.use(cors);
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -42,7 +35,9 @@ app.post("/create_preference", async(req, res) => {
       },
       auto_return: "approved",
     };
-    console.log(body)
+    res.setHeader("Access-Control-Allow-Origin", process.env.FRONT_URL);
+    res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
+    res.setHeader("Access-Control-Allow-Headers", "*");
     const preference = new Preference(client);
     const result = await preference.create({ body });
     res.json({
