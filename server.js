@@ -11,7 +11,15 @@ const client = new MercadoPagoConfig({
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.use(cors());
+// Configurar CORS para permitir solicitudes desde https://ecommerce-electro.vercel.app
+const corsOptions = {
+  origin: 'https://ecommerce-electro.vercel.app',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: false,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get("/", (req, res) => {
