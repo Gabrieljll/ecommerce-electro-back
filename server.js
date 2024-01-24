@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from 'dotenv';
+import bodyParser from 'body-parser';
 dotenv.config();
 
 // SDK de Mercado Pago
@@ -13,6 +14,7 @@ const client = new MercadoPagoConfig({
 const app = express();
 const port = process.env.PORT || 8080;
 
+app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
 
@@ -22,13 +24,16 @@ app.get("/", (req, res) => {
 
 app.post("/create_preference", async(req, res) => {
   try {
+    console.log(req.body)
+    const items = await req.body.map(item => ({
+      title: item.title,
+      quantity: Number(item.amount),
+      unit_price: Number(item.price),
+      currency_id: "ARS",
+    }));
+
     const body = {
-      items: [{
-        title: req.body.title,
-        quantity: Number(req.body.quantity),
-        unit_price: Number(req.body.price),
-        currency_id: "ARS",
-      }, ],
+      items,
       back_urls: {
         success: "https://ecommerce-electro.vercel.app/home",
         failure: "https://ecommerce-electro.vercel.app/home",
