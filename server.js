@@ -1,7 +1,11 @@
 import express from "express";
 import cors from "cors";
 import dotenv from 'dotenv';
+import mysql from 'mysql';
 import bodyParser from 'body-parser';
+import adminRoutes from "./routes/admin.routes.js"
+import publicRoutes from "./routes/public.routes.js"
+
 dotenv.config();
 
 // SDK de Mercado Pago
@@ -15,8 +19,13 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 app.use(bodyParser.json());
-app.use(cors());
 app.use(express.json());
+app.use(cors());
+
+app.use(adminRoutes)
+app.use(publicRoutes)
+
+
 
 app.get("/", (req, res) => {
   res.send("Soy el server :)");
