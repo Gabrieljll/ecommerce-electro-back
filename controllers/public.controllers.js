@@ -1,13 +1,48 @@
 import { pool } from "../db.js"
+import fs from "fs"
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import path from 'path';
+
+const __filename = fileURLToPath(
+  import.meta.url);
+
+const __dirname = dirname(__filename);
 
 export const getProducts = async(req, res) => {
   try {
-    const [result] = await pool.query("SELECT * FROM productos")
-    res.json(result)
+    // Obtener productos desde la tabla productos
+    const [result] = await pool.query("SELECT * FROM productos");
+
+    // Crear un array para almacenar los productos con información adicional
+    const productsWithImages = await Promise.all(result.map(async(product) => {
+      // Leer la imagen del archivo y convertirla en base64
+      const imagePath = path.join(__dirname, "..", "productsImages", product.imagen);
+      const imageBase64 = fs.readFileSync(imagePath, { encoding: 'base64' });
+
+      // Obtener el nombre de la categoría y la línea correspondientes a través de consultas adicionales
+      const [categoryResult] = await pool.query("SELECT nombre_categoria FROM categorias WHERE id = ?", [product.id_categoria]);
+      const [lineResult] = await pool.query("SELECT nombre FROM linea_productos WHERE id = ?", [product.id_linea]);
+
+      // Crear un nuevo objeto con la información del producto y la imagen en base64, así como los nombres de categoría y línea
+      const productWithImageAndNames = {
+        id: product.id,
+        nombre: product.nombre,
+        precio: product.precio,
+        imagen: imageBase64,
+        categoria: categoryResult[0].nombre_categoria,
+        linea: lineResult[0].nombre,
+        stock: product.stock
+      };
+
+      return productWithImageAndNames;
+    }));
+
+    res.json(productsWithImages);
   } catch (error) {
-    return res.status(500).json({ message: error.message })
+    return res.status(500).json({ message: error.message });
   }
-}
+};
 
 export const getLineas = async(req, res) => {
   try {
