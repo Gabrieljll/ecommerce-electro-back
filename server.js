@@ -42,11 +42,10 @@ app.get("/", (req, res) => {
 
 app.post("/create_preference", async(req, res) => {
   try {
-    console.log(req.body)
     const items = await req.body.map(item => ({
-      title: item.title,
+      title: item.nombre,
       quantity: Number(item.amount),
-      unit_price: Number(item.price),
+      unit_price: Number(item.precio),
       currency_id: "ARS",
     }));
 
