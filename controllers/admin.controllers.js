@@ -24,12 +24,27 @@ export const uploadImage = upload.single('imagen');
 
 export const updateProduct = async(req, res) => {
   try {
-    const [result] = await pool.query("UPDATE productos SET ? WHERE id = ?", [req, body, req.params.id]);
-    res.json(result)
+    const { id, sku, nombre, precio, descripcion, linea, categoria, stock } = req.body;
+    console.log(req.body)
+      // Construye dinámicamente la parte SET de la consulta
+    const updateColumns = [];
+    if (sku) updateColumns.push(`sku = '${sku}'`);
+    if (nombre) updateColumns.push(`nombre = '${nombre}'`);
+    if (precio) updateColumns.push(`precio = ${precio}`);
+    if (descripcion) updateColumns.push(`descripcion = '${descripcion}'`);
+    if (linea) updateColumns.push(`id_linea = '${linea}'`);
+    if (categoria) updateColumns.push(`id_categoria = '${categoria}'`);
+    if (stock) updateColumns.push(`stock = ${stock}`);
+
+    // Construye y ejecuta la consulta de actualización
+    const updateQuery = `UPDATE productos SET ${updateColumns.join(', ')} WHERE id = ${id}`;
+    const [result] = await pool.query(updateQuery);
+
+    res.json(result);
   } catch (error) {
-    return res.status(500).json({ message: error.messaje })
+    return res.status(500).json({ message: error.message });
   }
-}
+};
 
 export const deleteProduct = async(req, res) => {
   try {

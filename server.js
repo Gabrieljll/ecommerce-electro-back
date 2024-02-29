@@ -9,10 +9,16 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import path from 'path';
 
+
+
 const __filename = fileURLToPath(
   import.meta.url);
 
 const __dirname = dirname(__filename);
+
+
+
+
 
 dotenv.config();
 
@@ -52,11 +58,14 @@ app.post("/create_preference", async(req, res) => {
     const body = {
       items,
       back_urls: {
+        //cambiar por urls del host
         success: "https://ecommerce-electro.vercel.app/home",
         failure: "https://ecommerce-electro.vercel.app/home",
         pending: "https://ecommerce-electro.vercel.app/home",
       },
       auto_return: "approved",
+      //cambiar por url del host
+      notification_url: "https://1658-181-12-254-206.ngrok-free.app/webhook"
     };
     res.setHeader("Access-Control-Allow-Origin", process.env.FRONT_URL);
     res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
@@ -74,6 +83,27 @@ app.post("/create_preference", async(req, res) => {
     });
   }
 });
+
+app.post("/webhook", async(req, res) => {
+  const paymentId = req.query.id;
+  try {
+    const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${client.accessToken}`
+      }
+    });
+    if (response.ok) {
+      const data = await response.json()
+      console.log(data)
+    }
+    res.sendStatus(200)
+  } catch (error) {
+    console.log('Error:', error)
+    res.sendStatus(500)
+  }
+  console.log(req.query)
+})
 
 app.listen(port, () => {
   console.log(`El servidor esta corriendo en el puerto ${port}`);

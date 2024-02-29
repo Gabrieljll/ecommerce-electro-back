@@ -16,7 +16,7 @@ router.get("/getCategorias", getCategorias);
 
 router.post("/createProduct", uploadImage, createProduct)
 
-router.put("/updateProduct", updateProduct)
+router.post("/updateProduct", updateProduct)
 
 router.delete("/deleteProduct/:id", deleteProduct)
 

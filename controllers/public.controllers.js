@@ -3,11 +3,16 @@ import fs from "fs"
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import path from 'path';
+import { Resend } from 'resend';
+
 
 const __filename = fileURLToPath(
   import.meta.url);
 
 const __dirname = dirname(__filename);
+
+const resend = new Resend(process.env.RESEND_KEY);
+
 
 export const getProducts = async(req, res) => {
   try {
@@ -29,10 +34,12 @@ export const getProducts = async(req, res) => {
         id: product.id,
         nombre: product.nombre,
         precio: product.precio,
+        descripcion: product.descripcion,
         imagen: imageBase64,
         categoria: categoryResult[0].nombre_categoria,
         linea: lineResult[0].nombre,
-        stock: product.stock
+        stock: product.stock,
+        sku: product.sku
       };
 
       return productWithImageAndNames;
@@ -62,20 +69,39 @@ export const getCategorias = async(req, res) => {
   }
 }
 
-export const getProduct = (req, res) => {
+export const getProduct = async(req, res) => {
   try {
-    const [result] = pool.query("SELECT * FROM productos WHERE id = ?", [req.params.id])
+    const [result] = await pool.query("SELECT * FROM productos WHERE id = ?", [req.params.id]);
 
     if (result.length === 0) {
-      return res.status(404).json({ message: "Producto no encontrado" })
+      return res.status(404).json({ message: "Producto no encontrado" });
     }
-    res.json(result[0]);
 
+    const product = result[0];
+
+    // Leer la imagen del archivo y convertirla en base64
+    const imagePath = path.join(__dirname, "..", "productsImages", product.imagen);
+    const imageBase64 = fs.readFileSync(imagePath, { encoding: 'base64' });
+
+    // Agregar la imagen en base64 al objeto del producto
+
+
+    const productWithImage = {
+      id: product.id,
+      nombre: product.nombre,
+      precio: product.precio,
+      descripcion: product.descripcion,
+      imagen: imageBase64,
+      stock: product.stock,
+      sku: product.sku,
+    };
+
+    res.json(productWithImage);
   } catch (error) {
-    return res.status(500).json({ message: error.messaje })
+    return res.status(500).json({ message: error.message });
   }
+};
 
-}
 
 export const buyProducts = async(req, res) => {
   try {
@@ -117,4 +143,28 @@ export const updateStockProduct = async(req, res) => {
   } catch (error) {
     return res.status(500).json({ message: error.messaje })
   }
+}
+
+export const notifyBuy = async(req, res) => {
+  // Lógica para confirmar la compra
+
+  // Lógica para enviar el correo electrónico
+  console.log("DATOS DE LA COMPRA")
+  console.log(req.body)
+  const { data, error } = await resend.emails.send({
+    //from: 'Acme <noreply@cjrepuestos.com.ar>',
+    from: 'Acme <onboarding@resend.dev>',
+    //reemplazar con mail destino
+    to: ['mail@mail.com'],
+    subject: 'Hello World',
+    html: '<strong>It works!</strong>',
+  });
+
+  if (error) {
+    return console.error({ error });
+  }
+
+  console.log({ data });
+
+  // Otro código relacionado con la confirmación de la compra, si es necesario
 }
