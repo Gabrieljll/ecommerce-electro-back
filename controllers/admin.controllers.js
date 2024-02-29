@@ -25,8 +25,7 @@ export const uploadImage = upload.single('imagen');
 export const updateProduct = async(req, res) => {
   try {
     const { id, sku, nombre, precio, descripcion, linea, categoria, stock } = req.body;
-    console.log(req.body)
-      // Construye dinámicamente la parte SET de la consulta
+    // Construye dinámicamente la parte SET de la consulta
     const updateColumns = [];
     if (sku) updateColumns.push(`sku = '${sku}'`);
     if (nombre) updateColumns.push(`nombre = '${nombre}'`);
