@@ -1,6 +1,49 @@
 import { pool } from "../db.js"
 import { upload } from "../multerConfig.js"
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
+import dotenv from 'dotenv';
 
+
+dotenv.config();
+const jwt_secret = process.env.SECRET_JSONWEBTOKEN
+
+export const login = async(req, res) => {
+  try {
+    // Simulando una consulta a la base de datos para obtener el usuario
+    const userFromDatabase = await getUserFromDatabase(req.body.user);
+
+    if (!userFromDatabase) {
+      return res.status(401).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Comparando la contraseña ingresada con la almacenada en la base de datos
+    const passwordMatch = await bcrypt.compare(req.body.password, userFromDatabase.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Contraseña incorrecta' });
+    }
+
+    // En este punto, el usuario ha sido autenticado exitosamente
+    // Puedes generar un token de autenticación y enviarlo en la respuesta
+
+    // Por ejemplo, usando jsonwebtoken (asegúrate de tenerlo instalado: npm install jsonwebtoken)
+
+    const token = jwt.sign({ userId: userFromDatabase.id }, jwt_secret, { expiresIn: '1h' });
+
+    res.status(200).json({ token });
+  } catch (error) {
+    console.error('Error en la función de login:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
+async function getUserFromDatabase(username) {
+
+  const [result] = await pool.query("SELECT * FROM user_admin WHERE  user_name = ?)", username);
+
+  return result
+}
 
 export const createProduct = async(req, res) => {
   try {

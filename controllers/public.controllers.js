@@ -3,7 +3,6 @@ import fs from "fs"
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import path from 'path';
-import { Resend } from 'resend';
 import dotenv from 'dotenv';
 import { google } from "googleapis"
 import nodemailer from "nodemailer"
@@ -11,8 +10,6 @@ import nodemailer from "nodemailer"
 
 dotenv.config();
 
-
-const resend = new Resend(process.env.RESEND_KEY);
 
 const __filename = fileURLToPath(
   import.meta.url);
@@ -24,10 +21,14 @@ const CLIENT_ID = process.env.CLIENT_ID
 const CLIENT_SECRET = process.env.CLIENT_SECRET
 const REDIRECT_URI = process.env.REDIRECT_URI
 const REFRESH_TOKEN = process.env.REFRESH_TOKEN
+const EMAIL_WEB = process.env.EMAIL_WEB
 
 const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 
 oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN })
+
+
+
 
 
 
@@ -202,23 +203,6 @@ const notifyBuy = async(products, userData) => {
       </body>
     </html>`;
 
-    /*   const { data: emailData, error } = await resend.emails.send({
-        from: 'CJRepuestos <onboarding@resend.dev>',
-        to: [userEmail],
-        subject: 'Compra Exitosa',
-        html: emailBody,
-      });
-
-      if (error) {
-        return console.error({ error });
-      }
-      await notifyCJ(products, userData)
-
-      console.log({ emailData });
-     */
-
-
-
     const emailBodyPriv = `
       <html>
         <head>
@@ -242,7 +226,7 @@ const notifyBuy = async(products, userData) => {
           </div>
           <div class="details">
             <p>A continuación, se detallan datos del comprador y los productos adquiridos:</p>
-            <p>Nombre y apellido del: ${userData.nombre} ${userData.apellido}</p>
+            <p>Nombre y apellido del comprador: ${userData.nombre} ${userData.apellido}</p>
             <p>Datos de ubicación: ${userData.direccion}, ${userData.localidad}</p>
             <p>Número del comprador: ${userData.telefono}</p>
             <p>Email del comprador: ${userEmail}</p>
@@ -254,20 +238,6 @@ const notifyBuy = async(products, userData) => {
         </body>
       </html>`;
 
-
-
-
-
-
-
-    /*    const mailOptions = {
-         from: "CJ Repuestos <gabriel.leguizamon.gl@gmail.com>",
-         to: "debi43969@gmail.com",
-         subject: "Compra realizada con éxito",
-         html: emailBody
-       } */
-
-
     const [emailData, emailDataEcommerce] = await Promise.all([
       sendEmail(userEmail, "Compra Exitosa", emailBody),
       sendEmail("debi43969@gmail.com", "Nueva Compra", emailBodyPriv)
@@ -277,45 +247,57 @@ const notifyBuy = async(products, userData) => {
     console.log(emailDataEcommerce)
     return emailData && emailDataEcommerce
 
-
-
-
-
-    /* 
-        // Enviar ambos correos electrónicos de manera concurrente
-        const [buyerEmailResult, ecommerceEmailResult] = await Promise.all([
-          resend.emails.send({
-            from: 'CJRepuestos <onboarding@resend.dev>',
-            to: [userEmail],
-            subject: 'Compra Exitosa',
-            html: emailBody,
-          }),
-          resend.emails.send({
-            from: 'CJRepuestos <onboarding@resend.dev>',
-            to: ['debi43969@gmail.com'],
-            subject: 'Compra Exitosa',
-            html: emailBodyPriv,
-          }),
-        ]);
-
-        // Verificar si hubo errores en el envío de correos
-        if (buyerEmailResult.error) {
-          console.error('Error al enviar correo al comprador:', buyerEmailResult.error);
-        } else {
-          console.log('Correo al comprador enviado con éxito:', buyerEmailResult.data);
-        }
-
-        if (ecommerceEmailResult.error) {
-          console.error('Error al enviar correo al destinatario de ecommerce:', ecommerceEmailResult.error);
-        } else {
-          console.log('Correo al destinatario de ecommerce enviado con éxito:', ecommerceEmailResult.data);
-        } */
-
     // Otro código relacionado con la confirmación de la compra, si es necesario
   } catch (error) {
     console.error('Error en la función notifyBuy:', error);
   }
 };
+
+export const sendAskMail = async(req, res) => {
+  try {
+    const { email, asunto, nya, mensaje } = req.body
+
+    const emailBody = `
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: 'Arial', sans-serif;
+            }
+            .header {
+              background-color: #f2f2f2;
+              padding: 20px;
+              text-align: center;
+            }
+            .details {
+              margin: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Mail de consulta de un posible cliente</h1>
+          </div>
+          <div class="details">
+            <p>A continuación se detallan los datos de la persona y su consulta</p>
+            <p>Nombre y apellido del: ${nya} </p>
+            <p>Contacto de la persona: ${email}</p>
+            <h2>Consulta:</h2>
+            <p>${mensaje}</p>
+            
+          </div>
+        </body>
+      </html>`;
+
+    const result = await sendEmail(EMAIL_WEB, asunto, emailBody)
+    return res.status(200).json({
+      message: "Consulta enviada!"
+    })
+  } catch (error) {
+    console.error('Error en la función notifyBuy:', error);
+  }
+
+}
 
 
 const sendEmail = async(to, subject, html) => {
@@ -344,68 +326,6 @@ const sendEmail = async(to, subject, html) => {
   return transporter.sendMail(mailOptions);
 };
 
-const notifyCJ = async(products, userData) => {
-
-
-  const productsList = products.map(product => {
-    return `<li>
-                  <strong>${product.nombre}</strong>
-                  <p>Precio: ${product.precio}</p>
-                  <p>Cantidad: ${product.amount}</p>
-                  <!-- Agrega más detalles según tus necesidades -->
-                </li>`;
-  }).join('');
-
-
-  const emailBodyPriv = `
-    <html>
-      <head>
-        <style>
-          /* Agrega estilos CSS según tus preferencias */
-          body {
-            font-family: 'Arial', sans-serif;
-          }
-          .header {
-            background-color: #f2f2f2;
-            padding: 20px;
-            text-align: center;
-          }
-          .details {
-            margin: 20px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>¡Nueva Compra!</h1>
-        </div>
-        <div class="details">
-            <p>A continuación, se detallan datos del comprador y los productos adquiridos:</p>          
-            <p>Nombre y apellido del: ${userData.nombre} ${userData.apellido}</p>
-            <p>Datos de ubicación: ${userData.direccion}, ${userData.localidad}</p>
-            <p>Número del comprador: ${userData.telefono}</p>
-            <p>Email del comprador: ${userData.email}</p>
-            <p>Lista de productos: </p>
-          <ul>
-            ${productsList}
-          </ul>
-        </div>
-      </body>
-    </html>`;
-
-  const { data: emailDataPriv, errorPriv } = await resend.emails.send({
-    from: 'CJRepuestos <onboarding@resend.dev>',
-    to: ['debi43969@gmail.com'],
-    subject: 'Compra Exitosa',
-    html: emailBodyPriv,
-  });
-
-  if (errorPriv) {
-    return console.error({ errorPriv });
-  }
-  console.log({ emailDataPriv });
-
-}
 
 export const updateStockProduct = async(req, res) => {
   try {

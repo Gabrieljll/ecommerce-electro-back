@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { pool } from "../db.js"
 import { getLineas, getCategorias } from "../controllers/public.controllers.js";
-import { createProduct, updateProduct, deleteProduct, uploadImage } from "../controllers/admin.controllers.js";
+import { createProduct, updateProduct, deleteProduct, uploadImage, login } from "../controllers/admin.controllers.js";
 
 const router = Router();
 
@@ -19,5 +19,7 @@ router.post("/createProduct", uploadImage, createProduct)
 router.post("/updateProduct", updateProduct)
 
 router.delete("/deleteProduct/:id", deleteProduct)
+
+router.post("/login", login)
 
 export default router;
