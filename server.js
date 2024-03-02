@@ -11,6 +11,7 @@ import path from 'path';
 
 
 
+
 const __filename = fileURLToPath(
   import.meta.url);
 
@@ -22,11 +23,13 @@ const __dirname = dirname(__filename);
 
 dotenv.config();
 
+
+
 // SDK de Mercado Pago
 import { MercadoPagoConfig, Preference } from "mercadopago";
 //const access_token = process.env.ACCESS_TOKEN;
 const client = new MercadoPagoConfig({
-  accessToken: "TEST-3813879121312340-012217-dd7a2a50e5bc2ad63771a4a9cfa08089-458101383",
+  accessToken: "TEST-8059919641535379-030110-a25257b20b107654ed0f53eda6e342c6-553612402",
 });
 
 const app = express();
@@ -46,9 +49,14 @@ app.get("/", (req, res) => {
   res.send("Soy el server :)");
 });
 
+
+//CREA PREFERENCE PARA REALIZAR LA COMPRA
 app.post("/create_preference", async(req, res) => {
   try {
-    const items = await req.body.map(item => ({
+
+    const { cart } = req.body;
+
+    const items = cart.map(item => ({
       title: item.nombre,
       quantity: Number(item.amount),
       unit_price: Number(item.precio),
@@ -59,23 +67,20 @@ app.post("/create_preference", async(req, res) => {
       items,
       back_urls: {
         //cambiar por urls del host
-        success: "https://ecommerce-electro.vercel.app/home",
-        failure: "https://ecommerce-electro.vercel.app/home",
-        pending: "https://ecommerce-electro.vercel.app/home",
+        success: "http://localhost:3000/checkoutPayment",
+        failure: "http://localhost:3000/checkoutPayment",
+        pending: "http://localhost:3000/checkoutPayment",
       },
       auto_return: "approved",
       //cambiar por url del host
-      notification_url: "https://1658-181-12-254-206.ngrok-free.app/webhook"
+      notification_url: "https://396a-181-12-254-206.ngrok-free.app/webhook"
     };
-    res.setHeader("Access-Control-Allow-Origin", process.env.FRONT_URL);
-    res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
-    res.setHeader("Access-Control-Allow-Headers", "*");
+
     const preference = new Preference(client);
     const result = await preference.create({ body });
     res.json({
       id: result.id,
     });
-    console.log(res.id)
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -84,8 +89,10 @@ app.post("/create_preference", async(req, res) => {
   }
 });
 
+//CAPTURA DATOS DE LA COMPRA
 app.post("/webhook", async(req, res) => {
   const paymentId = req.query.id;
+
   try {
     const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       method: 'GET',
@@ -93,17 +100,18 @@ app.post("/webhook", async(req, res) => {
         'Authorization': `Bearer ${client.accessToken}`
       }
     });
+
     if (response.ok) {
+      console.log("llega")
       const data = await response.json()
-      console.log(data)
     }
     res.sendStatus(200)
   } catch (error) {
     console.log('Error:', error)
     res.sendStatus(500)
   }
-  console.log(req.query)
 })
+
 
 app.listen(port, () => {
   console.log(`El servidor esta corriendo en el puerto ${port}`);
