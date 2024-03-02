@@ -11,7 +11,7 @@ const jwt_secret = process.env.SECRET_JSONWEBTOKEN
 export const login = async(req, res) => {
   try {
     // Simulando una consulta a la base de datos para obtener el usuario
-    const userFromDatabase = await getUserFromDatabase(req.body.user);
+    const userFromDatabase = await getUserFromDatabase(req.body.nombre);
 
     if (!userFromDatabase) {
       return res.status(401).json({ message: 'Usuario no encontrado' });
@@ -19,7 +19,6 @@ export const login = async(req, res) => {
 
     // Comparando la contraseña ingresada con la almacenada en la base de datos
     const passwordMatch = await bcrypt.compare(req.body.password, userFromDatabase.password);
-
     if (!passwordMatch) {
       return res.status(401).json({ message: 'Contraseña incorrecta' });
     }
@@ -29,7 +28,7 @@ export const login = async(req, res) => {
 
     // Por ejemplo, usando jsonwebtoken (asegúrate de tenerlo instalado: npm install jsonwebtoken)
 
-    const token = jwt.sign({ userId: userFromDatabase.id }, jwt_secret, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: userFromDatabase.id_user_admin }, jwt_secret, { expiresIn: '1h' });
 
     res.status(200).json({ token });
   } catch (error) {
@@ -40,9 +39,9 @@ export const login = async(req, res) => {
 
 async function getUserFromDatabase(username) {
 
-  const [result] = await pool.query("SELECT * FROM user_admin WHERE  user_name = ?)", username);
+  const [result] = await pool.query("SELECT * FROM user_admin WHERE  user_name = ?", [username]);
 
-  return result
+  return result[0]
 }
 
 export const createProduct = async(req, res) => {
