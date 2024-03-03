@@ -23,13 +23,15 @@ const __dirname = dirname(__filename);
 
 dotenv.config();
 
-
+const ACCESS_TOKEN_MP = process.env.ACCESS_TOKEN_MP
+const BACK_URL = process.env.BACK_URL
+const FRONT_URL = process.env.FRONT_URL
 
 // SDK de Mercado Pago
 import { MercadoPagoConfig, Preference } from "mercadopago";
 //const access_token = process.env.ACCESS_TOKEN;
 const client = new MercadoPagoConfig({
-  accessToken: "TEST-8059919641535379-030110-a25257b20b107654ed0f53eda6e342c6-553612402",
+  accessToken: ACCESS_TOKEN_MP,
 });
 
 const app = express();
@@ -67,13 +69,13 @@ app.post("/create_preference", async(req, res) => {
       items,
       back_urls: {
         //cambiar por urls del host
-        success: "http://localhost:3000/checkoutPayment",
-        failure: "http://localhost:3000/checkoutPayment",
-        pending: "http://localhost:3000/checkoutPayment",
+        success: FRONT_URL + "/checkoutPayment",
+        failure: FRONT_URL + "/checkoutPayment",
+        pending: FRONT_URL + "/checkoutPayment",
       },
       auto_return: "approved",
       //cambiar por url del host
-      notification_url: "https://396a-181-12-254-206.ngrok-free.app/webhook"
+      notification_url: BACK_URL
     };
 
     const preference = new Preference(client);
