@@ -240,7 +240,7 @@ const notifyBuy = async(products, userData) => {
 
     const [emailData, emailDataEcommerce] = await Promise.all([
       sendEmail(userEmail, "Compra Exitosa", emailBody),
-      sendEmail("debi43969@gmail.com", "Nueva Compra", emailBodyPriv)
+      sendEmail(EMAIL_WEB, "Nueva Compra", emailBodyPriv)
     ]);
 
     console.log(emailData)
