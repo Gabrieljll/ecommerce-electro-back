@@ -17,6 +17,9 @@ const __filename = fileURLToPath(
 const __dirname = dirname(__filename);
 
 
+const logoImagePath = path.join(__dirname, "..", "public", "Logo_CJ_final.png");
+const logoImageBase64 = fs.readFileSync(logoImagePath, { encoding: 'base64' });
+
 const CLIENT_ID = process.env.CLIENT_ID
 const CLIENT_SECRET = process.env.CLIENT_SECRET
 const REDIRECT_URI = process.env.REDIRECT_URI
@@ -239,8 +242,8 @@ const notifyBuy = async(products, userData) => {
       </html>`;
 
     const [emailData, emailDataEcommerce] = await Promise.all([
-      sendEmail(userEmail, "Compra Exitosa", emailBody),
-      sendEmail(EMAIL_WEB, "Nueva Compra", emailBodyPriv)
+      sendEmail(userEmail, "Compra Exitosa", emailBody, logoImagePath),
+      sendEmail(EMAIL_WEB, "Nueva Compra", emailBodyPriv, logoImagePath)
     ]);
 
     console.log(emailData)
@@ -272,11 +275,40 @@ export const sendAskMail = async(req, res) => {
             .details {
               margin: 20px;
             }
+            .contenedorTituloLogo{
+                display:flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            .imgLogo{
+                width: 125px !important;
+                height: 125px !important;
+            }
+            .textoTitulo{
+                display:flex;
+                align-items: center;
+                padding-left: 5px;
+                justify-content:start;
+            }
+            .logoTitulo{
+                display:flex;
+                align-items: center;
+                padding-left: 5px;
+                justify-content:start;
+            }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1>Mail de consulta de un posible cliente</h1>
+          <div class="header">        
+            <div class="contenedorTituloLogo">
+                <div class="logoTitulo">
+                    <img class="imgLogo" src="cid:logoImage" alt="Logo" />
+                </div>
+                <div class="textoTitulo">
+                    <h1>Mail de consulta de un posible cliente</h1>
+                </div>
+            </div>
           </div>
           <div class="details">
             <p>A continuación se detallan los datos de la persona y su consulta</p>
@@ -289,7 +321,7 @@ export const sendAskMail = async(req, res) => {
         </body>
       </html>`;
 
-    const result = await sendEmail(EMAIL_WEB, asunto, emailBody)
+    const result = await sendEmail(EMAIL_WEB, asunto, emailBody, logoImagePath)
     return res.status(200).json({
       message: "Consulta enviada!"
     })
@@ -300,14 +332,14 @@ export const sendAskMail = async(req, res) => {
 }
 
 
-const sendEmail = async(to, subject, html) => {
+const sendEmail = async(to, subject, html, logoImagePath) => {
 
   const accessToken = await oAuth2Client.getAccessToken();
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       type: "OAuth2",
-      user: "gabriel.leguizamon.gl@gmail.com",
+      user: EMAIL_WEB,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       refreshToken: REFRESH_TOKEN,
@@ -316,11 +348,17 @@ const sendEmail = async(to, subject, html) => {
   })
 
 
+
   const mailOptions = {
     from: "CJ Repuestos <gabriel.leguizamon.gl@gmail.com>",
     to: to,
     subject: subject,
-    html: html
+    html: html,
+    attachments: [{
+      filename: 'Logo_CJ_final.png',
+      path: logoImagePath,
+      cid: 'logoImage'
+    }]
   };
 
   return transporter.sendMail(mailOptions);
